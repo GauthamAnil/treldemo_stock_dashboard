@@ -98,15 +98,15 @@ class TwitterSensor(treldev.Sensor):
         if self.debug:
             self.logger.debug(f"ts {ts} ts_next {ts_next}")
         
-        if getattr(self, 'crawler',None) is not None and self.last_tweet['created_at'] >= str(ts_next):
+        if getattr(self, 'crawler',None) is not None and self.last_tweet['created_ts'] >= str(ts_next):
             # crawler is good enough
             if self.debug:
-                self.logger.debug(f"reuse crawler as self.last_tweet['created_at'] = {self.last_tweet['created_at']} , ts_next = {ts_next}")
+                self.logger.debug(f"reuse crawler as self.last_tweet['created_ts'] = {self.last_tweet['created_ts']} , ts_next = {ts_next}")
             pass
         else:
             # reset the crawler
             if self.debug:
-                self.logger.debug(f"new crawler")
+                self.logger.debug(f"new crawler as self.last_tweet['created_ts'] = {self.last_tweet['created_ts'] if getattr(self,'last_tweet',None) else None} < ts_next = {ts_next}")
             self.crawler = crawl(self.hashtag, json.loads(self.credentials['twitter']), until=ts_next, logger=self.logger, max_tweets=100)
         folder = tempfile.mkdtemp()
         if self.debug:
