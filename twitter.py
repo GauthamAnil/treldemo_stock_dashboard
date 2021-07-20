@@ -76,8 +76,12 @@ class TwitterSensor(treldev.Sensor):
         now = datetime.datetime.now()
         index_ts = now
         itr = croniter.croniter(self.cron_constraint, now)
-        if not croniter.croniter.match(self.cron_constraint, index_ts):
-            index_ts = itr.get_prev(datetime.datetime)
+        # go back twice to make sure you have a complete window ahead.
+        # from        - - - - | - - - - | - x
+        # one back    - - - - | - - - - x - -
+        # two back    - - - - x - - - - | - -
+        # complete window     ^^^^^^^^^^^  after index_ts
+        index_ts = itr.get_prev(datetime.datetime) 
         index_ts = itr.get_prev(datetime.datetime)
             
         lookback_delta = datetime.timedelta(seconds=self.lookback_seconds)
