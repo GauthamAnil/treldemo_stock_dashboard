@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     select_sqls = []
     for input_ in full_args['inputs']:
-        if input_['name'] != 'tweets':
+        if input_['name'] != 'tweets_condensed':
             continue
         tweets_bq = BigQueryURI(input_['uri'])
         instance_ts,precision = instance_ts_str_to_ts_precision(input_['instance_ts_str'])
