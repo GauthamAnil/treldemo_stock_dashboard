@@ -22,16 +22,20 @@ def crawl(hashtag, credentials, tweets_per_query = 100, max_tweets = 1000000, si
                 return
 
             try:
-                yield tweet, {'id':tweet._json['id'],
-                              'created_at':str(datetime.datetime.strptime(tweet._json['created_at'],'%a %b %d %H:%M:%S +0000 %Y')),
-                              'user_id': tweet._json['user']['id'],
-                              'text':tweet._json.get('text'),
-                              'truncated':tweet._json['truncated'],
-                              'verified': tweet._json['user']['verified'],
-                }
+                tweet._json['created_ts'] = str(datetime.datetime.strptime(tweet._json['created_at'],'%a %b %d %H:%M:%S +0000 %Y'))
+                yield tweet, tweet._json
             except Exception as ex:
                 if logger:
                     logger.warning(f"could not process tweet {tweet._json['id']}. Got exception: {str(ex)}")
+        '''
+        {'id':tweet._json['id'],
+        'created_at':str(datetime.datetime.strptime(tweet._json['created_at'],'%a %b %d %H:%M:%S +0000 %Y')),
+        'user_id': tweet._json['user']['id'],
+        'text':tweet._json.get('text'),
+        'truncated':tweet._json['truncated'],
+        'verified': tweet._json['user']['verified'],
+        }
+        '''
         
         tweet_count += len(res)	
         min_id = res[-1].id
@@ -117,16 +121,16 @@ class TwitterSensor(treldev.Sensor):
                     _, self.last_tweet = next(self.crawler)
                     if self.debug:
                         self.logger.debug(f"tweet: {self.last_tweet}")
-                    if self.last_tweet['created_at'] >= str(ts_next):
+                    if self.last_tweet['created_ts'] >= str(ts_next):
                         if self.debug:
-                            self.logger.debug(f"tweet: {self.last_tweet['created_at']} > {str(ts_next)}. continuing")
+                            self.logger.debug(f"tweet: {self.last_tweet['created_ts']} > {str(ts_next)}. continuing")
                         continue
-                    if self.last_tweet['created_at'] >= str(ts):
+                    if self.last_tweet['created_ts'] >= str(ts):
                         json.dump(self.last_tweet, f)
                         f.write('\n')
                     else:
                         if self.debug:
-                            self.logger.debug(f"tweet: {self.last_tweet['created_at']} < {str(ts)}. breaking")
+                            self.logger.debug(f"tweet: {self.last_tweet['created_ts']} < {str(ts)}. breaking")
                         break
                 except StopIteration:
                     self.crawler = None
@@ -141,6 +145,27 @@ class TwitterSensor(treldev.Sensor):
         sys.stderr.flush()
         assert folder.startswith("/tmp/") # to avoid accidentally deleting something important
         os.system(f"rm -rf {folder}")
+
+        '''
+        bquri = treldev.gcputils.BigQueryURI(uri) # wraps credential management and improves readability
+        from google.cloud import bigquery
+        schema = [
+            bigquery.SchemaField("id","string", mode="REQUIRED"),
+            bigquery.SchemaField("created_at","datetime", mode="REQUIRED"),
+            bigquery.SchemaField("user_id","string", mode="NULLABLE"),
+            bigquery.SchemaField("text","string", mode="NULLABLE"),
+            bigquery.SchemaField("truncated","string", mode="NULLABLE"),
+            bigquery.SchemaField("verified","string", mode="NULLABLE"),
+        ]
+        bquri.load_file(folder+'/part-00000', {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
+                                               "schema":schema})
+        self.logger.info(f"Uploaded {load_info} to {uri}")
+        
+        assert folder.startswith("/tmp/") # to avoid accidentally deleting something important
+        os.system(f"rm -rf {folder}")
+
+        '''
+        
         
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(TwitterSensor)

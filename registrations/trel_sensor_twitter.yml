@@ -1,16 +1,18 @@
-sensor_id: twitter
+sensor_id: twitter_amc
 sensor.source_code.main:
   class: github
-  branch: main
+  branch: master
   path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
 sensor.main_executable: _code/twitter.py
 manager_name: main
 credentials.requested_name: default
+debug: true
 
-dataset_class: tweets_condensed
+dataset_class: tweets
 instance_ts_precision: M
 label: master
 repository: s3-us-east2
+max_instance_age_seconds: 5000
 
 sleep_duration: 60
 cron_constraint: "*/5 * * * *"
