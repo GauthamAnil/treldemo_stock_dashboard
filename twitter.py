@@ -28,13 +28,6 @@ def crawl(hashtag, credentials, tweets_per_query = 100, max_tweets = 1000000, si
                 if logger:
                     logger.warning(f"could not process tweet {tweet._json['id']}. Got exception: {str(ex)}")
         '''
-        {'id':tweet._json['id'],
-        'created_at':str(datetime.datetime.strptime(tweet._json['created_at'],'%a %b %d %H:%M:%S +0000 %Y')),
-        'user_id': tweet._json['user']['id'],
-        'text':tweet._json.get('text'),
-        'truncated':tweet._json['truncated'],
-        'verified': tweet._json['user']['verified'],
-        }
         '''
         
         tweet_count += len(res)	
@@ -108,7 +101,7 @@ class TwitterSensor(treldev.Sensor):
         if getattr(self, 'crawler',None) is not None and self.last_tweet['created_at'] >= str(ts_next):
             # crawler is good enough
             if self.debug:
-                self.logger.debug(f"reuse crawler")
+                self.logger.debug(f"reuse crawler as self.last_tweet['created_at'] = {self.last_tweet['created_at']} , ts_next = {ts_next}")
             pass
         else:
             # reset the crawler
