@@ -1,0 +1,26 @@
+name: tweets_condensed
+
+execution.profile: bigquery
+
+execution.source_code.main:
+  class: github
+  branch: master
+  path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
+execution.main_executable: _code/condense_and_load.py
+
+repository_map:
+  - tweets: s3-us-east2
+  
+scheduler:
+  class: single_instance
+  depends_on: [ tweets ]
+  labels: [ master ]
+  instance_ts_precisions: [ M ]
+  cron_constraint: "*/5 * * * *"
+  schedule_ts_min: "2021-07-05 00:00:00"
+
+execution.output_generator:
+  class: default
+  outputs:
+  - dataset_class: tweets_condensed
+    repository: bq-us

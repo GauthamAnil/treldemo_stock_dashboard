@@ -6,7 +6,7 @@ sensor.source_code.main:
 sensor.main_executable: _code/twitter.py
 manager_name: main
 credentials.requested_name: default
-debug: true
+debug: false
 
 dataset_class: tweets
 instance_ts_precision: M
@@ -17,5 +17,5 @@ max_instance_age_seconds: 5000
 sleep_duration: 60
 cron_constraint: "*/5 * * * *"
 hashtag: "#amc"
-lookback_seconds: 3600
+lookback_seconds: 7100
 

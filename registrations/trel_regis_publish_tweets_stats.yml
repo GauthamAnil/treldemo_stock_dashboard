@@ -1,0 +1,34 @@
+name: publish.tweet_stats
+
+execution.profile: bigquery
+
+execution.source_code.main:
+  class: github
+  branch: master
+  path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
+execution.main_executable: _code/push_to_bq_view.py
+
+repository_map:
+  - tweet_stats: bq-us
+  
+scheduler:
+  class: single_instance
+  depends_on: [ tweet_stats ]
+  labels: [ master ]
+  instance_ts_precisions: [ M ]
+  cron_constraint: "*/5 * * * *"
+  schedule_ts_min: "2021-07-21 00:10:00"
+  other_datasets:
+    - dataset_class: tweet_stats
+      instance_ts: _max_in_catalog
+      instance_ts_precision: M
+      instance_prefix: null
+      label: master
+      name: tweet_stats
+
+execution.output_generator:
+  class: default
+  outputs:
+  - dataset_class: tweet_stats.published
+    repository: bq-us
+    alt_uri: bq://saphireislands/trel_acer_publish/tweet_stats
