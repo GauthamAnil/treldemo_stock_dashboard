@@ -25,11 +25,11 @@ if __name__ == '__main__':
 with 
 series as (SELECT * FROM `{tweet_stats_bq.path}`)
 ,max_ as (select cast("{args._schedule_instance_ts}" as datetime) max_ts)
-,recent as (select series.* from series cross join max_ where datetime_diff(max_ts, ts, HOUR) < 5)
-,older as (select series.* from series cross join max_ where datetime_diff(max_ts, ts, HOUR) >= 5)
+,recent as (select series.* from series cross join max_ where datetime_diff(max_ts, ts, HOUR) < 500)
+,older as (select series.* from series cross join max_ where datetime_diff(max_ts, ts, HOUR) >= 500)
 , older_agg as (select datetime(timestamp_seconds(cast(avg(unix_seconds(timestamp(ts))) as int64))) ts, avg(tweets) tweets, avg(verified_tweets) verified_tweets from older group by substr(cast(ts as string),1,13))
 ,combined as (select * from older_agg UNION ALL select * from recent)
-,res as (select * from combined order by ts desc limit 300)
+,res as (select ts, * EXCEPT(ts) from combined order by ts desc limit 300)
 
-select * from res
+select * from series
     """)
