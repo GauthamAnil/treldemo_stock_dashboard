@@ -130,7 +130,7 @@ class TwitterSensor(treldev.Sensor):
                     if self.debug and 'tweet' in self.debug:
                         self.logger.debug(f"tweet: {self.last_tweet}")
                     if self.last_tweet['created_ts'] >= str(ts_next):
-                        if self.debug:
+                        if self.debug and 'tweet_ts' in self.debug:
                             self.logger.debug(f"tweet: {self.last_tweet['created_ts']} > {str(ts_next)}. continuing")
                         continue
                     if self.last_tweet['created_ts'] >= str(ts):
