@@ -70,6 +70,8 @@ class TwitterSensor(treldev.Sensor):
         len_to_keep = {'D':10, 'H':13,'M':16,'S':19}[self.instance_ts_precision]
         
         existing_tss = set([ ds['instance_ts'][:len_to_keep] for ds in datasets if ds['instance_ts_precision'] == self.instance_ts_precision ])
+        if self.debug:
+            self.logger.debug(f"existing_tss {sorted(existing_tss)}")
 
         # we will this set with all the timestamps that should have been there in the catalog, but are missing
         missing_tss = set([])
@@ -91,7 +93,7 @@ class TwitterSensor(treldev.Sensor):
                 missing_tss.add(index_ts)
             index_ts = itr.get_prev(datetime.datetime)
         if self.debug:
-            self.logger.debug(f"missing_tss {missing_tss}")
+            self.logger.debug(f"missing_tss {sorted(missing_tss)}")
         
         for missing_ts in sorted(missing_tss, reverse=True):
             yield missing_ts, { 'instance_prefix':None,
