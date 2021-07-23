@@ -11,7 +11,13 @@ def crawl(hashtag, credentials, tweets_per_query = 100, max_tweets = 1000000, si
     tweet_count = 0
     while tweet_count < max_tweets:
         extra_args = {} if min_id is None else {'max_id': str(min_id - 1)}
-        res = api.search(q=hashtag, count=min(max_tweets-tweet_count,tweets_per_query), result_type="recent", lang='en', **extra_args)
+        try:
+            res = api.search(q=hashtag, count=min(max_tweets-tweet_count,tweets_per_query), result_type="recent", lang='en', **extra_args)
+        except tweepy.error.TweepError:
+            if logger:
+                logger.exception("TweepError found")
+            time.sleep(30)
+            continue
         #p#rint( 'tweet_count', tweet_count, min_id, len(res), until, extra_args )
         if not res:
             return
@@ -32,6 +38,7 @@ def crawl(hashtag, credentials, tweets_per_query = 100, max_tweets = 1000000, si
         
         tweet_count += len(res)	
         min_id = res[-1].id
+        time.sleep(5)
 
 class Test(unittest.TestCase):
 
@@ -120,7 +127,7 @@ class TwitterSensor(treldev.Sensor):
             while True:
                 try:
                     _, self.last_tweet = next(self.crawler)
-                    if self.debug:
+                    if self.debug and 'tweet' in self.debug:
                         self.logger.debug(f"tweet: {self.last_tweet}")
                     if self.last_tweet['created_ts'] >= str(ts_next):
                         if self.debug:
@@ -147,26 +154,6 @@ class TwitterSensor(treldev.Sensor):
         assert folder.startswith("/tmp/") # to avoid accidentally deleting something important
         os.system(f"rm -rf {folder}")
 
-        '''
-        bquri = treldev.gcputils.BigQueryURI(uri) # wraps credential management and improves readability
-        from google.cloud import bigquery
-        schema = [
-            bigquery.SchemaField("id","string", mode="REQUIRED"),
-            bigquery.SchemaField("created_at","datetime", mode="REQUIRED"),
-            bigquery.SchemaField("user_id","string", mode="NULLABLE"),
-            bigquery.SchemaField("text","string", mode="NULLABLE"),
-            bigquery.SchemaField("truncated","string", mode="NULLABLE"),
-            bigquery.SchemaField("verified","string", mode="NULLABLE"),
-        ]
-        bquri.load_file(folder+'/part-00000', {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
-                                               "schema":schema})
-        self.logger.info(f"Uploaded {load_info} to {uri}")
-        
-        assert folder.startswith("/tmp/") # to avoid accidentally deleting something important
-        os.system(f"rm -rf {folder}")
-
-        '''
-        
         
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(TwitterSensor)
