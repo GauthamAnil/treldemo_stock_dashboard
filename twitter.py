@@ -62,6 +62,7 @@ class TwitterSensor(treldev.Sensor):
         self.cron_constraint = self.config['cron_constraint']
         self.hashtag = self.config['hashtag']
         self.lookback_seconds = self.config['lookback_seconds'] # how far we should backfill missing datasets
+        self.max_instance_age_seconds = self.lookback_seconds + 1
         self.locking_seconds = self.config.get('locking_seconds',600)
     
     def get_new_datasetspecs(self, datasets):
