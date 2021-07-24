@@ -1,0 +1,26 @@
+name: dashboard_stats
+
+execution.profile: bigquery
+
+execution.source_code.main:
+  class: github
+  branch: master
+  path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
+execution.main_executable: _code/dashboard_stats.py
+
+repository_map:
+  - tweet_stats: bq-us
+    stock_series_30day: bq-us
+  
+scheduler:
+  class: single_instance
+  depends_on: [ tweet_stats, stock_series_30day ]
+  labels: [ master ]
+  instance_ts_precisions: [ M ]
+  cron_constraint: "*/5 * * * *"
+  schedule_ts_min: "2021-07-23 17:25:00"
+
+execution.output_generator:
+  class: default
+  outputs:
+  - dataset_class: dashboard_stats

@@ -1,20 +1,20 @@
-sensor_id: twitter_amc
+sensor_id: finnhub
 sensor.source_code.main:
   class: github
   branch: master
   path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
-sensor.main_executable: _code/twitter.py
+sensor.main_executable: _code/finnhub_sensor.py
 manager_name: main
 credentials.requested_name: default
 debug: [ '1' ]
 
-dataset_class: tweets
+dataset_class: stock_ticks
 instance_ts_precision: M
 label: master
-repository: s3-us-east2
+repository: bq-us
 max_instance_age_seconds: 10000
 
 sleep_duration: 60
 cron_constraint: "*/5 * * * *"
-hashtag: "#amc"
+tickers: ["AMC"]
 

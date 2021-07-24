@@ -1,0 +1,34 @@
+name: publish.dashboard_stats
+
+execution.profile: bigquery
+
+execution.source_code.main:
+  class: github
+  branch: master
+  path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
+execution.main_executable: _code/push_to_bq_view.py
+
+repository_map:
+  - dashboard_stats: bq-us
+  
+scheduler:
+  class: single_instance
+  depends_on: [ dashboard_stats ]
+  labels: [ master ]
+  instance_ts_precisions: [ M ]
+  cron_constraint: "*/5 * * * *"
+  schedule_ts_min: "2021-07-23 18:00:00"
+  other_datasets:
+    - dataset_class: dashboard_stats
+      instance_ts: _max_in_catalog
+      instance_ts_precision: M
+      instance_prefix: null
+      label: master
+      name: dashboard_stats
+
+execution.output_generator:
+  class: default
+  outputs:
+  - dataset_class: dashboard_stats.published
+    repository: bq-us
+    alt_uri: bq://saphireislands/trel_acer_publish/dashboard_stats

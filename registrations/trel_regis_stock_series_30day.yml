@@ -1,0 +1,29 @@
+name: stock_series_30day
+
+execution.profile: bigquery
+
+execution.source_code.main:
+  class: github
+  branch: master
+  path: git@github.com:GauthamAnil/treldemo_stock_dashboard.git
+execution.main_executable: _code/stock_series_30day.py
+
+repository_map:
+  - stock_series_30day: bq-us
+    stock_ticks: bq-us
+  
+scheduler:
+  class: periodic
+  depends_on: [ stock_ticks ]
+  self_depends_on: [ stock_series_30day ]
+  labels: [ master ]
+  instance_ts_precisions: [ M ]
+  cron_constraint: "*/5 * * * *"
+  schedule_ts_min: "2021-07-05 00:00:00"
+
+execution.output_generator:
+  class: default
+  outputs:
+  - dataset_class: stock_series_30day
+    repository: bq-us
+    name: output
