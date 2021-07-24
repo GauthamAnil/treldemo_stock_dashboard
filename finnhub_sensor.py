@@ -54,7 +54,7 @@ class FinnhubSensor(treldev.Sensor):
             
         filename = tempfile.mkstemp()[1]
         if self.debug:
-            self.logger.debug(f"folder: {folder}")
+            self.logger.debug(f"filename: {filename}")
         
         with open(filename,'w') as f:
             min_ts = int(time.mktime(ts.timetuple()))
