@@ -1,6 +1,7 @@
 import json, yaml, os, unittest, croniter, time, datetime, tempfile, sys
 import finnhub
 import treldev
+from treldev import gcputils, S3Commands
 
 def crawl(ticker, min_ts, max_ts, credentials, logger=None):
     ''' Yields ticks '''
@@ -51,26 +52,34 @@ class FinnhubSensor(treldev.Sensor):
         if self.debug:
             self.logger.debug(f"ts {ts} ts_next {ts_next}")
             
-        folder = tempfile.mkdtemp()
+        filename = tempfile.mkstemp()[1]
         if self.debug:
             self.logger.debug(f"folder: {folder}")
         
-        with open(folder+'/part-00000','w') as f:
+        with open(filename,'w') as f:
             min_ts = int(time.mktime(ts.timetuple()))
             max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
             for ticker in self.tickers:
                 for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub'])):
                     json.dump(e,f)
                     f.write('\n')
-                
-        s3_commands = treldev.S3Commands(credentials=self.credentials)
-        assert uri.endswith('/')
-        uri = uri[:-1]
-        s3_commands.upload_folder(folder, uri, logger=self.logger)
-        self.logger.info(f"Uploaded {load_info} to {uri}")
-        sys.stderr.flush()
-        assert folder.startswith("/tmp/") # to avoid accidentally deleting something important
-        os.system(f"rm -rf {folder}")
+
+        
+        bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
+        from google.cloud import bigquery
+        schema = [
+            bigquery.SchemaField("ticker","string", mode="REQUIRED"),
+            bigquery.SchemaField("t","int64", mode="REQUIRED"),
+            bigquery.SchemaField("v","int64", mode="NULLABLE"),
+            bigquery.SchemaField("h","float64", mode="NULLABLE"),
+            bigquery.SchemaField("l","float64", mode="NULLABLE"),
+            bigquery.SchemaField("o","float64", mode="NULLABLE"),
+            bigquery.SchemaField("c","float64", mode="NULLABLE"),
+        ]
+        bquri.load_file(filename, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
+                                    "schema":schema})
+
+        os.system(f"rm {filename}")
         
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(FinnhubSensor)
