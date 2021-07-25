@@ -55,29 +55,32 @@ class FinnhubSensor(treldev.Sensor):
         filename = tempfile.mkstemp()[1]
         if self.debug:
             self.logger.debug(f"filename: {filename}")
-        
-        with open(filename,'w') as f:
-            min_ts = int(time.mktime(ts.timetuple()))
-            max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
-            for ticker in self.tickers:
-                for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub'])):
-                    json.dump(e,f)
-                    f.write('\n')
 
-        
-        bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
-        from google.cloud import bigquery
-        schema = [
-            bigquery.SchemaField("ticker","string", mode="REQUIRED"),
-            bigquery.SchemaField("t","int64", mode="REQUIRED"),
-            bigquery.SchemaField("v","int64", mode="NULLABLE"),
-            bigquery.SchemaField("h","float64", mode="NULLABLE"),
-            bigquery.SchemaField("l","float64", mode="NULLABLE"),
-            bigquery.SchemaField("o","float64", mode="NULLABLE"),
-            bigquery.SchemaField("c","float64", mode="NULLABLE"),
-        ]
-        bquri.load_file(filename, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
-                                    "schema":schema})
+        try:
+            with open(filename,'w') as f:
+                min_ts = int(time.mktime(ts.timetuple()))
+                max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
+                for ticker in self.tickers:
+                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub'])):
+                        json.dump(e,f)
+                        f.write('\n')
+
+
+            bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
+            from google.cloud import bigquery
+            schema = [
+                bigquery.SchemaField("ticker","string", mode="REQUIRED"),
+                bigquery.SchemaField("t","int64", mode="REQUIRED"),
+                bigquery.SchemaField("v","int64", mode="NULLABLE"),
+                bigquery.SchemaField("h","float64", mode="NULLABLE"),
+                bigquery.SchemaField("l","float64", mode="NULLABLE"),
+                bigquery.SchemaField("o","float64", mode="NULLABLE"),
+                bigquery.SchemaField("c","float64", mode="NULLABLE"),
+            ]
+            bquri.load_file(filename, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
+                                        "schema":schema})
+        except Exception as ex:
+            self.logger.error(str(ex))
 
         os.system(f"rm {filename}")
         
