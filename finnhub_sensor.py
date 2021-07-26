@@ -79,10 +79,8 @@ class FinnhubSensor(treldev.Sensor):
             ]
             bquri.load_file(filename, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
                                         "schema":schema})
-        except Exception as ex:
-            self.logger.error(str(ex))
-
-        os.system(f"rm {filename}")
+        finally:
+            os.system(f"rm {filename}")
         
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(FinnhubSensor)
