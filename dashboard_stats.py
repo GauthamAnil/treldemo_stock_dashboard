@@ -37,8 +37,8 @@ series as (SELECT * FROM `{tweet_stats_bq.path}`)
   coalesce(series.ts, stock_series.ts) ts, 
   series.* EXCEPT(ts), stock_series. * EXCEPT (ts) 
 from series full outer join stock_series on series.ts = stock_series.ts)
-,max_limit as (select distinct(substr(cast(ts_ny as string), 1, 10)) dates from joined order by 1 desc limit 8)
-,joined_filtered as (select * from joined where substr(cast(ts_ny as string), 1, 10) in (select * from max_limit))
+,recent_days as (select distinct(substr(cast(ts_ny as string), 1, 10)) dates from joined order by 1 desc limit 8)
+,joined_filtered as (select * from joined where substr(cast(ts_ny as string), 1, 10) in (select * from recent_days))
 
 
 
