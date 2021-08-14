@@ -8,6 +8,7 @@ def crawl(ticker, min_ts, max_ts, credentials, logger=None):
     finnhub_client = finnhub.Client(api_key=credentials['api_key'])
     res = finnhub_client.stock_candles(ticker, 1, min_ts, max_ts)
     if res['s'] != 'ok':
+        finnhub_client.close()
         return []
     keys = res.keys() - {'s'}
     for i in range(len(res['t'])):
