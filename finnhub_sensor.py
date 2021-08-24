@@ -3,11 +3,17 @@ import finnhub
 import treldev
 from treldev import gcputils, S3Commands
 
-def crawl(ticker, min_ts, max_ts, credentials, logger=None):
+def crawl(ticker, min_ts, max_ts, credentials, logger=None, debug=False):
     ''' Yields ticks '''
     finnhub_client = finnhub.Client(api_key=credentials['api_key'])
+    if debug:
+        logger.debug("Opened finnhub client")
     res = finnhub_client.stock_candles(ticker, 1, min_ts, max_ts)
+    if debug:
+        logger.debug("Got data")
     if res['s'] != 'ok':
+        if debug:
+            logger.debug("Closing finnhub client (not ok)")
         finnhub_client.close()
         return []
     keys = res.keys() - {'s'}
@@ -15,6 +21,8 @@ def crawl(ticker, min_ts, max_ts, credentials, logger=None):
         d = { k:res[k][i] for k in keys }
         d['ticker'] = ticker
         yield d
+    if debug:
+        logger.debug("Closing finnhub client")
     finnhub_client.close()
 
 class Test(unittest.TestCase):
@@ -62,9 +70,13 @@ class FinnhubSensor(treldev.Sensor):
                 min_ts = int(time.mktime(ts.timetuple()))
                 max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
                 for ticker in self.tickers:
-                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub'])):
+                    if self.debug:
+                        self.logger.debug(f"Processing ticker {ticker}")
+                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), logger, debug):
                         json.dump(e,f)
                         f.write('\n')
+                    if self.debug:
+                        self.logger.debug(f"Done processing ticker {ticker}")
 
 
             bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
