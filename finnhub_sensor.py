@@ -72,7 +72,7 @@ class FinnhubSensor(treldev.Sensor):
                 for ticker in self.tickers:
                     if self.debug:
                         self.logger.debug(f"Processing ticker {ticker}")
-                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), self.logger, debug):
+                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), self.logger, self.debug):
                         json.dump(e,f)
                         f.write('\n')
                     if self.debug:
