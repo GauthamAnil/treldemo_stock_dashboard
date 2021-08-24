@@ -15,7 +15,7 @@ def crawl(ticker, min_ts, max_ts, credentials, logger=None, debug=False):
         if debug:
             logger.debug("Closing finnhub client (not ok)")
         finnhub_client.close()
-        return []
+        raise Exception(f"Finnhub has error with message {res['s']}")
     keys = res.keys() - {'s'}
     for i in range(len(res['t'])):
         d = { k:res[k][i] for k in keys }
