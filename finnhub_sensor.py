@@ -66,22 +66,19 @@ class FinnhubSensor(treldev.Sensor):
         if self.debug:
             self.logger.debug(f"ts {ts} ts_next {ts_next}")
             
-        filename = tempfile.mkstemp()[1]
-        if self.debug:
-            self.logger.debug(f"filename: {filename}")
-
-        try:
-            with open(filename,'w') as f:
-                min_ts = int(time.mktime(ts.timetuple()))
-                max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
-                for ticker in self.tickers:
-                    if self.debug:
-                        self.logger.debug(f"Processing ticker {ticker}")
-                    for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), self.logger, self.debug):
-                        json.dump(e,f)
-                        f.write('\n')
-                    if self.debug:
-                        self.logger.debug(f"Done processing ticker {ticker}")
+        with tempfile.NamedTemporaryFile('w+t') as f:
+            if self.debug:
+                self.logger.debug(f"filename: {f.name}")
+            min_ts = int(time.mktime(ts.timetuple()))
+            max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
+            for ticker in self.tickers:
+                if self.debug:
+                    self.logger.debug(f"Processing ticker {ticker}")
+                for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), self.logger, self.debug):
+                    json.dump(e,f)
+                    f.write('\n')
+                if self.debug:
+                    self.logger.debug(f"Done processing ticker {ticker}")
 
 
             bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
@@ -95,10 +92,8 @@ class FinnhubSensor(treldev.Sensor):
                 bigquery.SchemaField("o","float64", mode="NULLABLE"),
                 bigquery.SchemaField("c","float64", mode="NULLABLE"),
             ]
-            bquri.load_file(filename, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
+            bquri.load_file(f.name, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
                                         "schema":schema})
-        finally:
-            os.system(f"rm {filename}")
         
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(FinnhubSensor)
