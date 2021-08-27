@@ -2,8 +2,6 @@ import argparse, yaml
 from treldev.gcputils import BigQueryURI
 from treldev import sql_repr, instance_ts_str_to_ts_precision
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--stock_series_30day", dest='stock_series')

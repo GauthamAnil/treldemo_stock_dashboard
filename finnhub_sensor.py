@@ -32,16 +32,28 @@ def crawl(ticker, min_ts, max_ts, credentials, logger=None, debug=False):
 
 class Test(unittest.TestCase):
 
-    def test_crawl(self):
-        credentials = {}
-
+    def test_save_data(self):
+        import logging
         with open("credentials.yml") as f:
             credentials = yaml.safe_load(f)
+        with open("registrations/trel_sensor_finnhub.yml") as f:
+            config = yaml.safe_load(f)
+            
+        root = logging.getLogger()
+        #root.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        root.addHandler(handler)
+        
         now = datetime.datetime.now()
-        min_ts = int(time.mktime((now - datetime.timedelta(hours=3)).timetuple()))
-        max_ts = int(time.mktime(now.timetuple()))
-        for v in crawl('AMC', min_ts, max_ts, json.loads(credentials['finnhub'])):
-            print(v)
+        sensor = FinnhubSensor(config, credentials, root, True)
+        path = "bq://saphireislands/tmp/test_"+str(time.time()).replace(".","_")
+        sensor.save_data_to_path(datetime.datetime(2021,8,26,20), path)
+        bquri = gcputils.BigQueryURI(path)
+        table = bquri.get_table()
+        self.assertGreater(table.num_rows, 0)
         
 class FinnhubSensor(treldev.Sensor):
 
@@ -79,7 +91,7 @@ class FinnhubSensor(treldev.Sensor):
                     f.write('\n')
                 if self.debug:
                     self.logger.debug(f"Done processing ticker {ticker}")
-
+            f.flush()
 
             bquri = gcputils.BigQueryURI(uri) # wraps credential management and improves readability
             from google.cloud import bigquery
@@ -94,7 +106,7 @@ class FinnhubSensor(treldev.Sensor):
             ]
             bquri.load_file(f.name, {"source_format":bigquery.job.SourceFormat.NEWLINE_DELIMITED_JSON,
                                         "schema":schema})
-        
+
 if __name__ == '__main__':
     treldev.Sensor.init_and_run(FinnhubSensor)
     
