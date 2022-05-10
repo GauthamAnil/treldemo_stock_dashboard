@@ -20,9 +20,7 @@ if __name__ == '__main__':
         stock_series_sql = f"select * from stock_series_null"
 
     select_sqls = []
-    for input_ in full_args['inputs']:
-        if input_['name'] != 'stock_ticks':
-            continue
+    for input_ in full_args['inputs']['stock_ticks']:
         ticks_bq = BigQueryURI(input_['uri'])
         #instance_ts,precision = instance_ts_str_to_ts_precision(input_['instance_ts_str'])
         select_sqls.append( f'select  datetime(timestamp_seconds(t)) ts, * EXCEPT (t)  from `{ticks_bq.path}`' )
