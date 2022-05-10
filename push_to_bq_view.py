@@ -17,4 +17,4 @@ def main(inputs, outputs, schedule_instance_ts, credentials, **kwargs):
     view_bq_uri.save_sql_as_view(f"select * from `{input_bq_uri.path}` -- {inputs[0]['instance_ts_str']}")
 
 if __name__ == '__main__':
-    main(credentials=credentials, **get_args())
+    main(**get_args())
