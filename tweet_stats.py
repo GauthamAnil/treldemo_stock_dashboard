@@ -32,9 +32,7 @@ if __name__ == '__main__':
     
 
     select_sqls = []
-    for input_ in full_args['inputs']:
-        if input_['name'] != 'tweets_condensed':
-            continue
+    for input_ in full_args['inputs']['tweets_condensed']:
         tweets_bq = BigQueryURI(input_['uri'])
         instance_ts,precision = instance_ts_str_to_ts_precision(input_['instance_ts_str'])
         select_sqls.append( f'select *, cast("{instance_ts}" as datetime) instance_ts from `{tweets_bq.path}`' )
