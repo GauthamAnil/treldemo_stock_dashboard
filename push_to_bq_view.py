@@ -14,7 +14,7 @@ def main(inputs, outputs, schedule_instance_ts, credentials, **kwargs):
     input_bq_uri = BigQueryURI(input_datasets[0]['uri'])
     view_bq_uri = BigQueryURI(list(outputs.values())[0][0]['uri'])
     print(f"Pushing path {input_bq_uri.path} to view {view_bq_uri.path}")
-    view_bq_uri.save_sql_as_view(f"select * from `{input_bq_uri.path}` -- {inputs[0]['instance_ts_str']}")
+    view_bq_uri.save_sql_as_view(f"select * from `{input_bq_uri.path}` -- {input_datasets[0]['instance_ts_str']}")
 
 if __name__ == '__main__':
     main(**get_args())
