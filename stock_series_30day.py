@@ -38,10 +38,10 @@ params as (select cast("{full_args['schedule_instance_ts']}" as datetime) schedu
 ,stock_series_null as (select datetime(timestamp_seconds(t)) ts, * EXCEPT (t) from `{ticks_bq.path}` where False)
 ,stock_series as ({stock_series_sql})
 ,stock_series_limited as (select stock_series.* from stock_series cross join params 
-where datetime_diff(ts, schedule_instance_ts, day) <= 30) 
+where datetime_diff(schedule_instance_ts, ts, day) <= 30) 
 ,ticks as ({select_sql_joined})
 
-,res as (select * from stock_series 
+,res as (select * from stock_series_limited
 UNION ALL
 select * from ticks)
 
