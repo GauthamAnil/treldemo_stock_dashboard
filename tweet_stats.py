@@ -52,6 +52,9 @@ where False)
 ,tweet_stats as ({tweet_stats_sql})
 ,tweets as ({select_sql_joined})
 
+,tweet_stats_limited as (select tweet_stats.* from tweet_stats cross join params 
+where datetime_diff(schedule_instance_ts, ts, day) <= 30) 
+
 ,new_stats as (select 
   instance_ts ts, 
   count(*) tweets, 
@@ -59,7 +62,7 @@ where False)
 from tweets 
 group by ts)
 
-,res as (select * from tweet_stats 
+,res as (select * from tweet_stats_limited
 UNION ALL
 select * from new_stats)
 
