@@ -74,6 +74,7 @@ class FinnhubSensor(treldev.Sensor):
     def save_data_to_path(self, load_info, uri, dataset):
         ''' if the previous call to get_new_datasetspecs returned a (load_info, datasetspec) tuple, then this call should save the data to the provided path, given the corresponding (load_info, path). '''
         ts = load_info
+        self.logger.debug(f"cron_constraint {self.cron_constraint}, ts {ts}")
         ts_next = croniter.croniter(self.cron_constraint, ts).get_next(datetime.datetime)
         if self.debug:
             self.logger.debug(f"ts {ts} ts_next {ts_next}")
