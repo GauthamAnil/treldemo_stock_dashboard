@@ -8,6 +8,7 @@ def crawl(ticker, min_ts, max_ts, credentials, logger=None, debug=False):
     finnhub_client = finnhub.Client(api_key=credentials['api_key'])
     if debug:
         logger.debug("Opened finnhub client")
+        logger.debug(f"finnhub_client.stock_candles({ticker}, 1, {min_ts}, {max_ts})")
     res = finnhub_client.stock_candles(ticker, 1, min_ts, max_ts)
     if debug:
         logger.debug("Got data")
