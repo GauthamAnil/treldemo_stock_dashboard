@@ -68,7 +68,7 @@ class FinnhubSensor(treldev.Sensor):
         self.lookback_seconds = self.config['max_instance_age_seconds'] - 1 # how far we should backfill missing datasets
         self.locking_seconds = self.config.get('locking_seconds',600)
         self.delay_seconds = 30
-        self.loading_cron = self.config,get('loading_cron',None)
+        self.loading_cron = self.config.get('loading_cron',None)
     
     def get_new_datasetspecs(self, datasets):
         ''' If there is data ready to be inserted, this should return a datasetspec. Else, return None '''
