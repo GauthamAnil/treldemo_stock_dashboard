@@ -68,6 +68,7 @@ class FinnhubSensor(treldev.Sensor):
         self.lookback_seconds = self.config['max_instance_age_seconds'] - 1 # how far we should backfill missing datasets
         self.locking_seconds = self.config.get('locking_seconds',600)
         self.delay_seconds = 30
+        self.loading_cron = self.config,get('loading_cron',None)
     
     def get_new_datasetspecs(self, datasets):
         ''' If there is data ready to be inserted, this should return a datasetspec. Else, return None '''
@@ -76,6 +77,9 @@ class FinnhubSensor(treldev.Sensor):
     def save_data_to_path(self, load_info, uri, dataset):
         ''' if the previous call to get_new_datasetspecs returned a (load_info, datasetspec) tuple, then this call should save the data to the provided path, given the corresponding (load_info, path). '''
         ts = load_info['instance_ts']
+        can_load = True
+        if self.loading_cron and not croniter.croniter.match(self.loading_cron, ts):
+            can_load = False
         self.logger.debug(f"cron_constraint {self.cron_constraint}, ts {ts}")
         ts_next = load_info['period_end']
         if self.debug:
@@ -86,7 +90,7 @@ class FinnhubSensor(treldev.Sensor):
                 self.logger.debug(f"filename: {f.name}")
             min_ts = int(time.mktime(ts.timetuple()))
             max_ts = int(time.mktime((ts_next - datetime.timedelta(seconds=1)).timetuple()))
-            for ticker in self.tickers:
+            for ticker in (self.tickers if can_load else []):
                 if self.debug:
                     self.logger.debug(f"Processing ticker {ticker}")
                 for e in crawl(ticker, min_ts, max_ts, json.loads(self.credentials['finnhub']), self.logger, self.debug):
